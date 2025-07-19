@@ -1,34 +1,41 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Lightbulb, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface Message {
   id: string;
   content: string;
-  sender: "user" | "assistant";
-  timestamp: Date;
+  sender: "user" | "bot";
+  timestamp: string; // store ISO string for consistency
 }
 
 export default function ChatBox() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content:
-        "Hi! I'm here to help you discover and explore new ideas. What kind of project or concept are you thinking about? Feel free to share any thoughts, no matter how rough or incomplete they might be!",
-      sender: "assistant",
-      timestamp: new Date(),
+      content: "Hi! I'm here to help you discover and explore new ideas.",
+      sender: "bot",
+      timestamp: new Date().toISOString(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to bottom on messages or loading changes
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages, isLoading]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -37,39 +44,51 @@ export default function ChatBox() {
       id: Date.now().toString(),
       content: inputValue,
       sender: "user",
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
 
-    // Simulate AI response (replace with actual AI integration)
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content:
-          "That's an interesting idea! Let me help you explore this further. What specific aspects would you like to dive deeper into? Consider thinking about your target audience, potential challenges, or unique features that could set this apart.",
-        sender: "assistant",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
-  };
+    try {
+      const response = await fetch("/api/idea-discovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userQuestion: inputValue }),
+      });
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+      const data = await response.json();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          content: data.summary || "Sorry, I didn't catch that.",
+          sender: "bot",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          content: "Something went wrong. Please try again.",
+          sender: "bot",
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-4xl h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-4">
           <Link href="/">
             <Button variant="outline" size="sm" className="bg-white/80">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -82,17 +101,21 @@ export default function ChatBox() {
           </div>
         </div>
 
-        {/* Chat Interface */}
-        <Card className="h-[600px] flex flex-col bg-white/90 backdrop-blur-sm">
+        {/* Chat Container */}
+        <Card className="flex flex-col flex-1 bg-white/90 backdrop-blur-sm">
           <CardHeader className="border-b">
             <CardTitle className="text-lg text-gray-800">
               Brainstorming Assistant
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-0">
-            {/* Messages Area */}
-            <ScrollArea className="flex-1 p-4">
+          <CardContent className="flex flex-col flex-1 p-0 overflow-hidden">
+            {/* Scrollable Messages Area - simplified div */}
+            <div
+              ref={scrollRef}
+              className="flex-1 p-4 overflow-y-auto"
+              style={{ maxHeight: "calc(100vh - 400px)" }}
+            >
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div
@@ -112,7 +135,7 @@ export default function ChatBox() {
                     >
                       <p className="text-sm">{message.content}</p>
                       <p className="text-xs opacity-70 mt-1">
-                        {message.timestamp.toLocaleTimeString([], {
+                        {new Date(message.timestamp).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
@@ -125,32 +148,32 @@ export default function ChatBox() {
                   <div className="flex justify-start">
                     <div className="bg-gray-100 rounded-lg px-4 py-2">
                       <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
+                        {[0, 0.1, 0.2].map((delay) => (
+                          <div
+                            key={delay}
+                            className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                            style={{ animationDelay: `${delay}s` }}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Input Area */}
-            <div className="border-t p-4">
+            <div className="border-t p-4 bg-white/80">
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Share your ideas, thoughts, or questions..."
-                  className="flex-1"
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && !e.shiftKey && handleSendMessage()
+                  }
+                  placeholder="Share your ideas..."
                   disabled={isLoading}
+                  className="flex-1"
                 />
                 <Button
                   onClick={handleSendMessage}
@@ -160,9 +183,6 @@ export default function ChatBox() {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Press Enter to send, Shift+Enter for new line
-              </p>
             </div>
           </CardContent>
         </Card>
