@@ -87,7 +87,6 @@ export default function ChatBox() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-100">
       <div className="container mx-auto px-4 py-8 max-w-4xl h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-4">
           <Link href="/">
             <Button variant="outline" size="sm" className="bg-white/80">

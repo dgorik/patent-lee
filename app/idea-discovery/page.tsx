@@ -1,6 +1,6 @@
 import ChatBox from "./components/ChatBox";
 
-export default function LandingPage() {
+export default function IdeaDiscoveryPage() {
   return (
     <div>
       <ChatBox />
