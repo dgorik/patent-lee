@@ -17,7 +17,6 @@ export default function Hero() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Idea Discovery Card */}
           <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-6 mx-auto">
               <Lightbulb className="w-8 h-8 text-yellow-600" />
@@ -38,7 +37,6 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Draft Proposal Card */}
           <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6 mx-auto">
               <FileText className="w-8 h-8 text-blue-600" />
