@@ -11,7 +11,7 @@ interface Message {
   id: string;
   content: string;
   sender: "user" | "bot";
-  timestamp: string; // store ISO string for consistency
+  timestamp: string;
 }
 
 export default function ChatBox() {
@@ -27,7 +27,6 @@ export default function ChatBox() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom on messages or loading changes
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
