@@ -1,15 +1,37 @@
-// lib/exploreIdeaAgent.ts
+async function createSession(userId: string, sessionId: string) {
+  const url = `https://hackathon-agent-693370628354.europe-west1.run.app/apps/hackathon_agent/users/${userId}/sessions/${sessionId}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}), // empty body as per curl
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Session creation failed: ${errorText}`);
+  }
+
+  return await response.json();
+}
 
 export async function runExploreIdeaAgent(userQuestion: string) {
+  const userId = 'u_123';
+  const sessionId = 's_123';
+
+  // Create session first
+  await createSession(userId, sessionId);
+
+  // Send message
   const url = 'https://hackathon-agent-693370628354.europe-west1.run.app/run';
 
   const body = {
     appName: 'hackathon_agent',
-    userId: 'u_123',
-    sessionId: 's_123',
+    userId,
+    sessionId,
     newMessage: {
       role: 'user',
-      parts: [{ text: `"${userQuestion}"`}]
+      parts: [{ text: userQuestion }], // no extra quotes
     },
   };
 

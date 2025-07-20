@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
 
     const res = await runExploreIdeaAgent(userQuestion);
     const result = res[0].content;
+    console.log(result)
 
     if (result.functionCall?.name === "brainstorm_ideas") {
       // If function is internal, send the functionCall back to agent endpoint to execute
@@ -19,8 +20,8 @@ export async function POST(request: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             appName: "hackathon_agent",
-            userId: "u_123",
-            sessionId: "s_123",
+            userId: "my_test_user_1",
+            sessionId: "my_test_session_1",
             newMessage: {
               role: "user",
               parts: [
