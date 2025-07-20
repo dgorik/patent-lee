@@ -65,7 +65,10 @@ export default function ChatBox() {
         ...prev,
         {
           id: (Date.now() + 1).toString(),
-          content: data.summary || "Sorry, I didn't catch that.",
+          content: (data.summary || "Sorry, I didn't catch that.")
+            .replace(/\*\*/g, "\n**") // newline before every "**"
+            .replace(/\n\s*/g, "\n") // remove extra spaces after newlines
+            .trim(),
           sender: "bot",
           timestamp: new Date().toISOString(),
         },
@@ -140,7 +143,9 @@ export default function ChatBox() {
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <p className="text-sm whitespace-pre-line">
+                      {message.content}
+                    </p>
                     <p className="text-xs opacity-70 mt-1">
                       {new Date(message.timestamp).toLocaleTimeString([], {
                         hour: "2-digit",

@@ -1,6 +1,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { runExploreIdeaAgent } from "@/lib/exploreIdeaAgent";
+import { runFunctionCall } from "@/lib/runfunctionCall";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,48 +9,16 @@ export async function POST(request: NextRequest) {
     const { userQuestion } = body;
 
     const res = await runExploreIdeaAgent(userQuestion);
-    const result = res[0].content;
+    // console.log(res)
+    const result = res[0].content.parts[0];
     console.log(result)
 
     if (result.functionCall?.name === "brainstorm_ideas") {
-      // If function is internal, send the functionCall back to agent endpoint to execute
-      const functionCallResponse = await fetch(
-        "https://hackathon-agent-693370628354.europe-west1.run.app/run",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            appName: "hackathon_agent",
-            userId: "my_test_user_1",
-            sessionId: "my_test_session_1",
-            newMessage: {
-              role: "user",
-              parts: [
-                {
-                  text: result.functionCall.args.topic,
-                },
-              ],
-            },
-            functionCall: result.functionCall,
-          }),
-        }
-      );
-
-      if (!functionCallResponse.ok) {
-        const errorText = await functionCallResponse.text();
-        throw new Error(
-          `Function call failed: ${functionCallResponse.status} - ${errorText}`
-        );
-      }
-
-      const functionCallResult = await functionCallResponse.json();
-      console.log("Function call result:", functionCallResult);
-
-      return NextResponse.json({ success: true, data: functionCallResult });
+      return await runFunctionCall(result)
     }
 
     // If no function call, return the original summary text
-    const summary = result.parts[0].text;
+    const summary = result.text;
     console.log(summary)
     return NextResponse.json({ success: true, summary });
   } catch (error) {
